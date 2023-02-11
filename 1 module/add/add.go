@@ -1,5 +1,6 @@
 /*Sources:
 intToSlice, test functions are used to test add function
+they might be stupid, but were written just to practise
 */
 
 package main
