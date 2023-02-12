@@ -65,52 +65,50 @@ func LCM(a, b int) int {
 	return res
 }
 
-func (f *frac) Simplify() {
+func (f frac) Simplify() frac {
 	if f.numerator != 0 {
 		gcd := GCD(intToAbs(f.numerator), intToAbs(f.denominator))
 		f.numerator /= gcd
 		f.denominator /= gcd
 	}
+	return f
 }
 
-func (f frac) Sum(a, b frac) frac {
-	denomLCM := LCM(a.denominator, b.denominator)
-	aCoef := denomLCM / a.denominator
-	bCoef := denomLCM / b.denominator
-	f.numerator = a.numerator*aCoef + b.numerator*bCoef
-	f.denominator = denomLCM
-	f.Simplify()
-	return f
+func (f frac) Sum(b frac) frac {
+	denominatorLCM := LCM(f.denominator, b.denominator)
+	fCoefficient := denominatorLCM / f.denominator
+	bCoefficient := denominatorLCM / b.denominator
+	f.numerator = f.numerator*fCoefficient + b.numerator*bCoefficient
+	f.denominator = denominatorLCM
+	c := f.Simplify()
+	return c
 }
 
 func (f frac) Subtract(b frac) frac {
-	denomLCM := LCM(f.denominator, b.denominator)
-	aCoef := denomLCM / f.denominator
-	bCoef := denomLCM / b.denominator
-	f.numerator = f.numerator*aCoef - b.numerator*bCoef
-	f.denominator = denomLCM
-	f.Simplify()
-	return f
+	denominator := LCM(f.denominator, b.denominator)
+	fCoefficient := denominator / f.denominator
+	bCoefficient := denominator / b.denominator
+	f.numerator = f.numerator*fCoefficient - b.numerator*bCoefficient
+	f.denominator = denominator
+	return f.Simplify()
 }
 
 func (f frac) Multiply(b frac) frac {
 	f.numerator = f.numerator * b.numerator
 	f.denominator = f.denominator * b.denominator
-	f.Simplify()
-	return f
+	return f.Simplify()
 }
 
 func (f frac) Divide(b frac) frac {
 	f.numerator = f.numerator * b.denominator
 	f.denominator = f.denominator * b.numerator
-	f.Simplify()
-	return f
+	return f.Simplify()
 }
 
 func (f frac) Compare(b frac) int {
-	denomLCM := LCM(f.denominator, b.denominator)
-	fCoefficient := denomLCM / f.denominator
-	bCoefficient := denomLCM / b.denominator
+	denominatorLCM := LCM(f.denominator, b.denominator)
+	fCoefficient := denominatorLCM / f.denominator
+	bCoefficient := denominatorLCM / b.denominator
 	return f.numerator*fCoefficient - b.numerator*bCoefficient
 }
 
@@ -121,7 +119,7 @@ func swapRow(matrix [][]frac, i, j int) {
 	copy(matrix[j][:], tmp)
 }
 
-func forwardElim(matrix [][]frac, N int) bool { // returns whether matrix singular or not
+func forwardElimination(matrix [][]frac, N int) bool { // returns whether matrix singular or not
 	for k := 0; k < N; k++ {
 		iMax := k
 		vMax := matrix[iMax][k]
@@ -150,7 +148,7 @@ func forwardElim(matrix [][]frac, N int) bool { // returns whether matrix singul
 	return true
 }
 
-func backSub(matrix [][]frac, N int) []frac {
+func backSubstitution(matrix [][]frac, N int) []frac {
 	solutions := make([]frac, N)
 	for i := range solutions {
 		solutions[i].denominator = 1
@@ -184,8 +182,8 @@ func matrixInput() ([][]frac, int) { //returns matrix [N][N+1] and N
 }
 
 func gaussMethod(matrix [][]frac, N int) []frac {
-	if forwardElim(matrix, N) {
-		solutions := backSub(matrix, N)
+	if forwardElimination(matrix, N) {
+		solutions := backSubstitution(matrix, N)
 		return solutions
 	} else {
 		return nil
