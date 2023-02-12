@@ -4,12 +4,35 @@ import (
 	"fmt"
 )
 
+/* fraction struct is representing common fraction and has 2 fields:
+*  1)numerator
+*  2)denominator
+*  This struct supports methods:
+*  1)Abs (absolute value)
+*  2)Add +
+*  3)Subtract -
+*  4)Multiply *
+*  5)Divide /
+*  6)Compare
+ */
 type frac struct {
-	num   int
-	denom int
+	numerator   int
+	denominator int
 }
 
-func intAbs(x int) int {
+func main() {
+	matrix, N := matrixInput()
+	solutions := gaussMethod(matrix, N)
+	if solutions != nil {
+		for i := range solutions {
+			fmt.Printf("%d/%d\n", solutions[i].numerator, solutions[i].denominator)
+		}
+	} else {
+		fmt.Println("No solution") //system either inconsistent or has infinitely many solutions
+	}
+}
+
+func intToAbs(x int) int {
 	if x < 0 {
 		return -x
 	} else {
@@ -17,16 +40,16 @@ func intAbs(x int) int {
 	}
 }
 
-func (f frac) abs() frac {
-	if f.num < 0 {
-		res := frac{-f.num, f.denom}
+func (f frac) Abs() frac {
+	if f.numerator < 0 {
+		res := frac{-f.numerator, f.denominator}
 		return res
 	} else {
 		return f
 	}
 }
 
-func gcd(a, b int) int {
+func GCD(a, b int) int {
 	for a != b {
 		if a > b {
 			a -= b
@@ -37,62 +60,58 @@ func gcd(a, b int) int {
 	return a
 }
 
-func lcm(a, b int) int {
-	res := (a * b) / gcd(a, b)
+func LCM(a, b int) int {
+	res := (a * b) / GCD(a, b)
 	return res
 }
 
-func (f *frac) simplify() {
-	if f.num != 0 {
-		gcd := gcd(intAbs(f.num), intAbs(f.denom))
-		f.num /= gcd
-		f.denom /= gcd
+func (f *frac) Simplify() {
+	if f.numerator != 0 {
+		gcd := GCD(intToAbs(f.numerator), intToAbs(f.denominator))
+		f.numerator /= gcd
+		f.denominator /= gcd
 	}
 }
 
-func (f frac) sum(a, b frac) frac {
-	denomLCM := lcm(a.denom, b.denom)
-	aCoef := denomLCM / a.denom
-	bCoef := denomLCM / b.denom
-	f.num = a.num*aCoef + b.num*bCoef
-	f.denom = denomLCM
-	f.simplify()
+func (f frac) Sum(a, b frac) frac {
+	denomLCM := LCM(a.denominator, b.denominator)
+	aCoef := denomLCM / a.denominator
+	bCoef := denomLCM / b.denominator
+	f.numerator = a.numerator*aCoef + b.numerator*bCoef
+	f.denominator = denomLCM
+	f.Simplify()
 	return f
 }
 
-func (f frac) subtract(a, b frac) frac {
-	denomLCM := lcm(a.denom, b.denom)
-	aCoef := denomLCM / a.denom
-	bCoef := denomLCM / b.denom
-	f.num = a.num*aCoef - b.num*bCoef
-	f.denom = denomLCM
-	f.simplify()
+func (f frac) Subtract(b frac) frac {
+	denomLCM := LCM(f.denominator, b.denominator)
+	aCoef := denomLCM / f.denominator
+	bCoef := denomLCM / b.denominator
+	f.numerator = f.numerator*aCoef - b.numerator*bCoef
+	f.denominator = denomLCM
+	f.Simplify()
 	return f
 }
 
-func (f frac) mult(a, b frac) frac {
-	f.num = a.num * b.num
-	f.denom = a.denom * b.denom
-	f.simplify()
+func (f frac) Multiply(b frac) frac {
+	f.numerator = f.numerator * b.numerator
+	f.denominator = f.denominator * b.denominator
+	f.Simplify()
 	return f
 }
 
-func (f frac) div(a, b frac) frac {
-	f.num = a.num * b.denom
-	f.denom = a.denom * b.num
-	f.simplify()
+func (f frac) Divide(b frac) frac {
+	f.numerator = f.numerator * b.denominator
+	f.denominator = f.denominator * b.numerator
+	f.Simplify()
 	return f
 }
 
-func (f frac) compare(a, b frac) int {
-	denomLCM := lcm(a.denom, b.denom)
-	aCoef := denomLCM / a.denom
-	bCoef := denomLCM / b.denom
-	return a.num*aCoef - b.num*bCoef
-}
-
-func (f frac) print() {
-	fmt.Printf("%d/%d", f.num, f.denom)
+func (f frac) Compare(b frac) int {
+	denomLCM := LCM(f.denominator, b.denominator)
+	fCoefficient := denomLCM / f.denominator
+	bCoefficient := denomLCM / b.denominator
+	return f.numerator*fCoefficient - b.numerator*bCoefficient
 }
 
 func swapRow(matrix [][]frac, i, j int) {
@@ -108,12 +127,12 @@ func forwardElim(matrix [][]frac, N int) bool { // returns whether matrix singul
 		vMax := matrix[iMax][k]
 
 		for i := k + 1; i < N; i++ {
-			if matrix[i][k].compare(matrix[i][k].abs(), vMax) > 0 {
+			if matrix[i][k].Abs().Compare(vMax) > 0 {
 				vMax = matrix[i][k]
 				iMax = i
 			}
 		}
-		if matrix[k][iMax].num == 0 {
+		if matrix[k][iMax].numerator == 0 {
 			return false
 		}
 		if iMax != k {
@@ -121,71 +140,54 @@ func forwardElim(matrix [][]frac, N int) bool { // returns whether matrix singul
 		}
 		for i := k + 1; i < N; i++ {
 			var f frac
-			f = f.div(matrix[i][k], matrix[k][k])
+			f = matrix[i][k].Divide(matrix[k][k])
 			for j := k + 1; j <= N; j++ {
-				matrix[i][j] = f.subtract(matrix[i][j], f.mult(matrix[k][j], f))
+				matrix[i][j] = matrix[i][j].Subtract(f.Multiply(matrix[k][j]))
 			}
-			matrix[i][k].num = 0
+			matrix[i][k].numerator = 0
 		}
 	}
 	return true
 }
 
-func backSub(matrix [][]frac, N int) {
-	x := make([]frac, N)
-	for i := range x {
-		x[i].denom = 1
+func backSub(matrix [][]frac, N int) []frac {
+	solutions := make([]frac, N)
+	for i := range solutions {
+		solutions[i].denominator = 1
 	}
 
 	for i := N - 1; i >= 0; i-- {
-		x[i] = matrix[i][N]
+		solutions[i] = matrix[i][N]
 
 		for j := i + 1; j < N; j++ {
-			x[i] = x[i].subtract(x[i], x[i].mult(matrix[i][j], x[j]))
+			solutions[i] = solutions[i].Subtract(solutions[j].Multiply(matrix[i][j]))
 		}
-		x[i] = x[i].div(x[i], matrix[i][i])
+		solutions[i] = solutions[i].Divide(matrix[i][i])
 	}
-	fmt.Println("Solutions:")
-	for i := 0; i < N; i++ {
-		x[i].print()
-		fmt.Println()
-	}
+	return solutions
 }
 
 func matrixInput() ([][]frac, int) { //returns matrix [N][N+1] and N
 	var N int
-	fmt.Scanln(&N)
+	_, _ = fmt.Scanln(&N)
 	matrix := make([][]frac, N)
 	for i := range matrix {
 		matrix[i] = make([]frac, N+1)
 	}
 	for i := 0; i < N; i++ {
 		for j := 0; j < N+1; j++ {
-			fmt.Scan(&matrix[i][j].num)
-			matrix[i][j].denom = 1
+			_, _ = fmt.Scan(&matrix[i][j].numerator)
+			matrix[i][j].denominator = 1
 		}
 	}
 	return matrix, N
 }
 
-func printMatrix(matrix [][]frac) {
-	for i := 0; i < len(matrix); i++ {
-		for j := 0; j < len(matrix[0]); j++ {
-			matrix[i][j].print()
-			fmt.Print("\t")
-		}
-		fmt.Println()
+func gaussMethod(matrix [][]frac, N int) []frac {
+	if forwardElim(matrix, N) {
+		solutions := backSub(matrix, N)
+		return solutions
+	} else {
+		return nil
 	}
-}
-
-func main() {
-	/*	var a = frac{-2, 9}
-		var b = frac{4, 18}
-		c := a.abs()
-		fmt.Println(c)
-		fmt.Println(a.compare(a, b))
-		a.print()*/
-	matrix, N := matrixInput()
-	forwardElim(matrix, N)
-	backSub(matrix, N)
 }
