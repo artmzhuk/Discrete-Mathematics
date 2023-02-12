@@ -7,6 +7,20 @@ import (
 	"strings"
 )
 
+func main() {
+	in := bufio.NewReader(os.Stdin)
+	line, _ := in.ReadString('\n')
+	result := polishNotation(line)
+	fmt.Println(result)
+}
+
+func pop2(stack []int) ([]int, int, int) {
+	a := stack[len(stack)-1]
+	b := stack[len(stack)-2]
+	stack = stack[:len(stack)-2]
+	return stack, a, b
+}
+
 func polishNotation(input string) int {
 	input = strings.ReplaceAll(input, "(", "")
 	input = strings.ReplaceAll(input, ")", "")
@@ -22,34 +36,23 @@ func polishNotation(input string) int {
 		case inputRune[i] >= '0' && inputRune[i] <= '9':
 			stack = append(stack, int(inputRune[i]-'0'))
 		case inputRune[i] == '+':
-			a := stack[len(stack)-1]
-			b := stack[len(stack)-2]
-			stack = stack[:len(stack)-2]
+			var a, b int
+			stack, a, b = pop2(stack)
 			stack = append(stack, a+b)
 		case inputRune[i] == '-':
-			a := stack[len(stack)-1]
-			b := stack[len(stack)-2]
-			stack = stack[:len(stack)-2]
+			var a, b int
+			stack, a, b = pop2(stack)
 			stack = append(stack, a-b)
 		case inputRune[i] == '*':
-			a := stack[len(stack)-1]
-			b := stack[len(stack)-2]
-			stack = stack[:len(stack)-2]
+			var a, b int
+			stack, a, b = pop2(stack)
 			stack = append(stack, a*b)
 		case inputRune[i] == '/':
-			a := stack[len(stack)-1]
-			b := stack[len(stack)-2]
-			stack = stack[:len(stack)-2]
+			var a, b int
+			stack, a, b = pop2(stack)
 			stack = append(stack, a/b)
 		}
 	}
 	result := stack[0]
 	return result
-}
-
-func main() {
-	in := bufio.NewReader(os.Stdin)
-	line, _ := in.ReadString('\n')
-	result := polishNotation(line)
-	fmt.Println(result)
 }
