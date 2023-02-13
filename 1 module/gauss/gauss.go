@@ -50,6 +50,8 @@ func (f frac) Abs() frac {
 }
 
 func GCD(a, b int) int {
+	a = intToAbs(a)
+	b = intToAbs(b)
 	for a != b {
 		if a > b {
 			a -= b
@@ -61,7 +63,7 @@ func GCD(a, b int) int {
 }
 
 func LCM(a, b int) int {
-	res := (a * b) / GCD(a, b)
+	res := intToAbs((a * b) / GCD(a, b))
 	return res
 }
 
@@ -70,6 +72,12 @@ func (f frac) Simplify() frac {
 		gcd := GCD(intToAbs(f.numerator), intToAbs(f.denominator))
 		f.numerator /= gcd
 		f.denominator /= gcd
+	} else {
+		f.denominator = 1
+	}
+	if f.denominator < 0 {
+		f.numerator *= -1
+		f.denominator *= -1
 	}
 	return f
 }
