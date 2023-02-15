@@ -2,21 +2,7 @@ package main
 
 import "fmt"
 
-var testArray = []int{557, 765, 705, 218, 54, 673, -4, 79, -866, 586}
-
-func less(i, j int) bool {
-	if testArray[i] < testArray[j] {
-		return true
-	} else {
-		return false
-	}
-}
-
-func swap(i, j int) {
-	testArray[i], testArray[j] = testArray[j], testArray[i]
-}
-
-func partition(low, high int, less func(i int, j int) bool, swap func(i int, j int)) int {
+func partition(low, high int, less func(i, j int) bool, swap func(i, j int)) int {
 	i, j := low, low
 	for j < high {
 		if less(j, high) {
@@ -29,7 +15,7 @@ func partition(low, high int, less func(i int, j int) bool, swap func(i int, j i
 	return i
 }
 
-func qsortRec(low, high int, less func(i int, j int) bool, swap func(i int, j int)) {
+func qsortRec(low, high int, less func(i, j int) bool, swap func(i, j int)) {
 	if low < high {
 		q := partition(low, high, less, swap)
 		qsortRec(low, q-1, less, swap)
@@ -42,8 +28,11 @@ func qsort(n int, less func(i, j int) bool, swap func(i, j int)) {
 }
 
 func test() {
+	var testArray = []int{557, 765, 705, 218, 54, 673, -4, 79, -866, 586}
 	fmt.Println(testArray)
-	qsort(len(testArray), less, swap)
+	qsort(len(testArray),
+		func(i, j int) bool { return testArray[i] < testArray[j] },
+		func(i, j int) { testArray[i], testArray[j] = testArray[j], testArray[i] })
 	fmt.Println(testArray)
 }
 
