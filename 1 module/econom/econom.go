@@ -2,34 +2,25 @@ package main
 
 import "fmt"
 
-func getOperation(input []rune) []rune {
-	openedBrackets := 1
-	var i int
-	for i = 0; openedBrackets != 0 && i < len(input); i++ {
+func ops(input string) int {
+	inputRune := []rune(input)
+	startIndexes := make([]int, 0, len(input)/2) // stack of '(' indexes in inputRune slice
+	expressions := make(map[string]bool, 1)
+	for i := 0; i < len(input); i++ {
 		if input[i] == '(' {
-			openedBrackets++
+			startIndexes = append(startIndexes, i)
 		}
 		if input[i] == ')' {
-			openedBrackets--
+			index := startIndexes[len(startIndexes)-1] // pops '(' index from stack,
+			startIndexes = startIndexes[:len(startIndexes)-1]
+			expressions[string(inputRune[index:i+1])] = true // adds "()" expression to the "expressions" map
 		}
 	}
-	return input[:i-1]
-}
-
-func econom(input string) int {
-	inputRune := []rune(input)
-	operations := make(map[string]bool, 1)
-	for i := 0; i < len(inputRune); i++ {
-		if inputRune[i] == '(' {
-			operation := getOperation(inputRune[i+1:])
-			operations[string(operation)] = true
-		}
-	}
-	return len(operations)
+	return len(expressions)
 }
 
 func main() {
 	var input string
 	_, _ = fmt.Scan(&input)
-	fmt.Println(econom(input))
+	fmt.Println(ops(input))
 }
