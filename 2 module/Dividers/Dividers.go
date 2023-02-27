@@ -34,6 +34,7 @@ func printDividersGraph(x int) {
 				for k := 0; k < len(alreadyInGraph)-1; k++ {
 					if alreadyInGraph[k]%xDividers[j] == 0 {
 						isToPrint = false
+						break
 					}
 				}
 				if isToPrint {
