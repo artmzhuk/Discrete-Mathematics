@@ -72,8 +72,18 @@ func test() {
 	testRune := ([]rune)(str)
 	testByte := ([]byte)(str)
 
-	fmt.Println("encode test: ", string(testRune) == string(encode(testRune)))
-	fmt.Println("decode test: ", string(testByte) == string(decode(testByte)))
+	fmt.Print("encode test: ")
+	if string(testRune) == string(encode(testRune)) {
+		fmt.Print("Passed \n")
+	} else {
+		fmt.Print("Failed \n")
+	}
+	fmt.Print("decode test: ")
+	if string(testByte) == string(decode(testByte)) {
+		fmt.Print("Passed \n")
+	} else {
+		fmt.Print("Failed \n")
+	}
 }
 
 func main() {
