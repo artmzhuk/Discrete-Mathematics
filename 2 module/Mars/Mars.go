@@ -83,20 +83,6 @@ func findSolutions(g *Graph) [][]int {
 }
 
 func selectSolution(s [][]int) {
-	for i := range s {
-		for j := range s[i] {
-			if s[i][j] == s[i][0] {
-				fmt.Print(j+1, " ")
-			}
-		}
-		fmt.Print("...")
-		for j := range s[i] {
-			if s[i][j] != s[i][0] {
-				fmt.Print(j+1, " ")
-			}
-		}
-		fmt.Println()
-	}
 	diff := make([]int, len(s))
 	for i := range s {
 		count1 := 0
@@ -163,7 +149,6 @@ func selectSolution(s [][]int) {
 		for i := range firstGroups[0] {
 			fmt.Print(firstGroups[0][i]+1, " ")
 		}
-		fmt.Println("exit")
 	}
 }
 
