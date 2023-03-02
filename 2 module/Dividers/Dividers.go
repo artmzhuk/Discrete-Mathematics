@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 )
 
 func printDividersGraph(x int) {
@@ -13,7 +12,7 @@ func printDividersGraph(x int) {
 
 	xDividers2 := make([]int, 0, 1)
 	xDividers := make([]int, 0, 1)
-	for i := 1; i <= int(math.Sqrt(float64(x))); i++ {
+	for i := 1; i*i <= x; i++ {
 		if x%i == 0 {
 			xDividers2 = append(xDividers2, i)
 			if x/i != i {
