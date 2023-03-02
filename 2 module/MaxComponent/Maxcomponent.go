@@ -2,24 +2,20 @@ package main
 
 import (
 	"fmt"
-	"math"
-	"strconv"
 )
 
 type Graph struct {
-	adjList           [][]int
-	visited           []bool
+	adjList          [][]int
+	visited          []bool
 	component        [][]int
-	componentNodeNum []int
-	componentEdgeNum []int
-	//edgesCountForNode []int
+	numOfEdgesToNode []int
 }
 
-func scanCreateGraph() (*Graph, string) {
+func scanCreateGraph() (*Graph, []int) {
 	var n, m int
-	ans := "graph G {\n"
+	ans := make([]int, 0)
 	_, _ = fmt.Scan(&n, &m)
-	howManyEdges := make([]int, n)
+	numOfEdgesToNode := make([]int, n)
 	list := make([][]int, n)
 	for i := 0; i < m; i++ {
 		var u, v int
@@ -28,25 +24,22 @@ func scanCreateGraph() (*Graph, string) {
 			list[u] = append(list[u], v)
 		}
 		list[v] = append(list[v], u)
-		howManyEdges[v]++
-		ans = ans + strconv.Itoa(u) + "--" + strconv.Itoa(v) + "!\n"
+		numOfEdgesToNode[v]++
+		ans = append(ans, u, v)
 	}
-	ans = ans + "}"
 	graph := new(Graph)
 	graph.adjList = list
 	graph.visited = make([]bool, n)
 	graph.component = make([][]int, 0)
-	graph.componentEdgeNum = make([]int, 0)
-	graph.componentNodeNum = make([]int, 0)
-	//graph.edgesCountForNode = howManyEdges
+	graph.numOfEdgesToNode = numOfEdgesToNode
 	return graph, ans
 }
 
 func dfs(g *Graph, at int) {
 	g.visited[at] = true
 	g.component[len(g.component)-1] = append(g.component[len(g.component)-1], at)
-	for nextIndex := range g.adjList[at] {
-		next := g.adjList[at][nextIndex]
+	for i := range g.adjList[at] {
+		next := g.adjList[at][i]
 		if !g.visited[next] {
 			dfs(g, next)
 		}
@@ -66,55 +59,88 @@ func findComponents(g *Graph) *Graph {
 	return g
 }
 
-func selectAnswer(graph *Graph, answer string) int {
-	component := graph.component
-	maxNumOfNodes := -1
-	//maxIndex := -1
-	similarNums := make([]int, 0)
-	for i := range component {
-		if len(component[i]) > maxNumOfNodes {
-			maxNumOfNodes = len(component[i])
-			//maxIndex = i
+func printAnswer(g *Graph, input []int) {
+	var idToPrint int
+	nextStep := true
+	if nextStep {
+		maxNumOfNodes := -1
+		similarNums := 0
+		for i := range g.component {
+			if len(g.component[i]) > maxNumOfNodes {
+				maxNumOfNodes = len(g.component[i])
+				similarNums = 0
+				idToPrint = i
+			}
+			if len(g.component[i]) == maxNumOfNodes {
+				similarNums++
+			}
+		}
+		if similarNums == 1 {
+			nextStep = false
 		}
 	}
-	for i := range component {
-		if len(component[i]) == maxNumOfNodes {
-			similarNums = append(similarNums, i)
-		}
-	}
-	if len(similarNums) != 1 {
-		edges := make([]int, len(similarNums))
-		maxNumOfEdges := 0
-		for i := range similarNums {
-			for j := range component[i] {
-				edges[i] += graph.edgesCountForNode[component[i][j]]
-				if edges[i] > maxNumOfEdges {
-					maxNumOfEdges = edges[i]
+	if nextStep {
+		edgeNum := make([]int, len(g.component))
+		maxNumOfEdges := -1
+		similarEdges := 0
+		for i := range g.component {
+			for j := range g.component[i] {
+				edgeNum[i] += g.numOfEdgesToNode[g.component[i][j]]
+				if edgeNum[i] > maxNumOfEdges {
+					maxNumOfEdges = edgeNum[i]
+					similarEdges = 0
+					idToPrint = i
+				}
+				if edgeNum[i] == maxNumOfEdges {
+					similarEdges++
 				}
 			}
 		}
-		countMaxEdges :=
-		for i := range edges {
-			if edges[i] == maxNumOfEdges {
-				countMaxEdges++
-			}
+		if similarEdges == 1 {
+			nextStep = false
 		}
-		if countMaxEdges != 1{
-			minNumber := make([]int, len(edges))
-			for i := range minNumber{
-				minNumber[i] = math.MaxInt
-			}
-			for i := range edges{
-				for j := range component[edges[i]]{
-					if component[edges[i]][j] < minNumber[	]
+	}
+	if nextStep {
+		minIds := make([]int, len(g.component))
+		for i := range g.component {
+			minId := g.component[i][0]
+			for j := range g.component[i] {
+				if g.component[i][j] < minId {
+					minId = g.component[i][j]
 				}
+			}
+			minIds[i] = minId
+		}
+		idToPrint = 0
+		for i := range minIds {
+			if minIds[i] < minIds[idToPrint] {
+				idToPrint = i
 			}
 		}
 	}
+	redNodes := make(map[int]bool)
+	fmt.Print("Graph g {\n")
+	for i := range g.component[idToPrint] {
+		redNodes[g.component[idToPrint][i]] = true
+		fmt.Print(g.component[idToPrint][i], " [color = red]\n")
+	}
+
+	for i := range input {
+		if i%2 == 0 {
+			fmt.Print(input[i], "--")
+		} else {
+			fmt.Print(input[i])
+			if redNodes[input[i]] {
+				fmt.Print(" [color = red]")
+			}
+			fmt.Print("\n")
+		}
+	}
+	fmt.Print("}")
 }
 
 func main() {
-	graph, ans := scanCreateGraph()
+	graph, input := scanCreateGraph()
 	findComponents(graph)
-	selectAnswer(graph, ans)
+	printAnswer(graph, input)
 }

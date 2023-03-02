@@ -25,9 +25,9 @@ func scanCreateGraph() *Graph {
 	}
 	graph := new(Graph)
 	graph.adjList = list
-	graph.ids = make([]int, m)
-	graph.low = make([]int, m)
-	graph.visited = make([]bool, m)
+	graph.ids = make([]int, n)
+	graph.low = make([]int, n)
+	graph.visited = make([]bool, n)
 	return graph
 }
 
