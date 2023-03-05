@@ -38,34 +38,37 @@ func inputGraph() *Graph {
 }
 
 func findSolutions(g *Graph) [][]int {
+	visited := make([]bool, len(g.adjList))
 	possibleSolutions := make([][]int, 0)
-	for i := range g.adjList {
+	for i := 0; i < len(g.adjList); i++ {
+		if visited[i] {
+			continue
+		}
 		isBipartite := true
 		color := make([]int, len(g.adjList))
-		for offset := 0; offset < len(g.adjList); offset++ {
-			iOffset := (i + offset) % len(g.adjList)
-			if color[iOffset] != 0 {
+		/*		if color[i] != 0 {
 				continue
-			}
-			queue := make([]int, 0)
-			color[iOffset] = 1
-			queue = append(queue, iOffset)
-			for len(queue) != 0 && isBipartite {
-				popped := queue[0]
-				queue = queue[1:]
-				for j := range g.adjList[popped] {
-					if color[g.adjList[popped][j]] == 0 {
-						if color[popped] == 1 {
-							color[g.adjList[popped][j]] = 2
-						} else {
-							color[g.adjList[popped][j]] = 1
-						}
-						queue = append(queue, g.adjList[popped][j])
+			}*/
+		queue := make([]int, 0)
+		color[i] = 1
+		visited[i] = true
+		queue = append(queue, i)
+		for len(queue) != 0 && isBipartite {
+			popped := queue[0]
+			queue = queue[1:]
+			for j := range g.adjList[popped] {
+				if color[g.adjList[popped][j]] == 0 {
+					if color[popped] == 1 {
+						color[g.adjList[popped][j]] = 2
 					} else {
-						if color[g.adjList[popped][j]] == color[popped] {
-							isBipartite = false
-							break
-						}
+						color[g.adjList[popped][j]] = 1
+					}
+					visited[g.adjList[popped][j]] = true
+					queue = append(queue, g.adjList[popped][j])
+				} else {
+					if color[g.adjList[popped][j]] == color[popped] {
+						isBipartite = false
+						break
 					}
 				}
 			}
