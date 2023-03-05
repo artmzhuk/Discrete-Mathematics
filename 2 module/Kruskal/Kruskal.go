@@ -5,13 +5,17 @@ import (
 	"math"
 )
 
+type edge struct {
+	from, to int
+	weight   float64
+}
+
 type rollercoaster struct {
 	x, y float64
 }
 
-type edge struct {
-	from, to int
-	weight   float64
+func (a rollercoaster) getR(b rollercoaster) float64 {
+	return math.Sqrt(math.Pow(a.x-b.x, 2) + math.Pow(a.y-b.y, 2))
 }
 
 func partition(low, high int, less func(i, j int) bool, swap func(i, j int)) int {
@@ -39,11 +43,7 @@ func qsort(n int, less func(i, j int) bool, swap func(i, j int)) {
 	qsortRec(0, n-1, less, swap)
 }
 
-func (a rollercoaster) getR(b rollercoaster) float64 {
-	return math.Sqrt(math.Pow(a.x-b.x, 2) + math.Pow(a.y-b.y, 2))
-}
-
-func inputRollers() []edge {
+func getEdges() []edge {
 	n := 0
 	_, _ = fmt.Scan(&n)
 	rollers := make([]rollercoaster, n)
@@ -109,6 +109,6 @@ func kruskal(edges []edge) float64 {
 }
 
 func main() {
-	edges := inputRollers()
+	edges := getEdges()
 	fmt.Printf("%.2f\n", kruskal(edges))
 }
