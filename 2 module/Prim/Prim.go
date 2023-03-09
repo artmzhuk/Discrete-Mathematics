@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type Graph struct {
 	adjList [][]Node
@@ -29,10 +32,6 @@ func newMinHeapNode(v, key int) MinHeapNode {
 	return res
 }
 
-func swapMinHeapNode(a, b int, heap *MinHeap) {
-	heap.pos
-}
-
 func minHeapify(minHeap *MinHeap, idx int) {
 	smallest := idx
 	left := 2*idx + 1
@@ -50,6 +49,7 @@ func minHeapify(minHeap *MinHeap, idx int) {
 		minHeap.pos[minHeap.array[idx].v] = smallest
 		minHeap.array[smallest], minHeap.array[idx] =
 			minHeap.array[idx], minHeap.array[smallest]
+		minHeapify(minHeap, smallest)
 	}
 }
 
@@ -62,30 +62,73 @@ func isEmpty(heap *MinHeap) bool {
 }
 
 func extractMin(heap *MinHeap) MinHeapNode {
-	if isEmpty(heap) {
+	/*	if isEmpty(heap) {
 		return nil
-	}
-	heap.array[0] = heap.array[(len(heap.array) - 1)]
-	heap.array = heap.array[:len(heap.array)-1]
-	return heap.array[0]
+	}*/
+	root := heap.array[0]
+	last := heap.array[len(heap.array)-1]
+	heap.pos[root.v] = heap.size - 1
+	heap.pos[last.v] = 0
+
+	heap.array[0] = last
+	heap.size--
+	minHeapify(heap, 0)
+	return root
 }
 
-/*func decreaseKey(heap *MinHeap, v,key int){
-	heap.array[v].key = key
-	while()
-}*/
+func decreaseKey(heap *MinHeap, v, key int) {
+	i := heap.pos[v]
+	heap.array[i].key = key
+	for i != 0 && heap.array[i].key < heap.array[(i-1)/2].key {
+		heap.pos[heap.array[i].v] = (i - 1) / 2
+		heap.pos[heap.array[(i-1)/2].v] = i
+		heap.array[i], heap.array[(i-1)/2] = heap.array[(i-1)/2], heap.array[i]
+		i = (i - 1) / 2
+	}
+}
+
+func isInMinHeap(heap *MinHeap, v int) bool {
+	if heap.pos[v] < heap.size {
+		return true
+	}
+	return false
+}
 
 func mst(g Graph) {
+	res := 0
 	V := g.nodeN
 	parent := make([]int, V)
 	key := make([]int, V)
 	heap := MinHeap{
 		size:     0,
 		capacity: V,
-		pos:      nil,
+		pos:      make([]int, V),
 		array:    make([]MinHeapNode, V),
 	}
-
+	for v := 1; v < V; v++ {
+		parent[v] = -1
+		key[v] = math.MaxInt
+		heap.array[v] = newMinHeapNode(v, key[v])
+		heap.pos[v] = v
+	}
+	key[0] = 0
+	heap.array[0] = newMinHeapNode(0, key[0])
+	heap.pos[0] = 0
+	heap.size = V
+	for !isEmpty(&heap) {
+		minHeapNode := extractMin(&heap)
+		u := minHeapNode.v
+		for i := 0; i < len(g.adjList[u]); i++ {
+			pCrawl := g.adjList[u][i]
+			v := g.adjList[u][i].dest
+			if isInMinHeap(&heap, v) && pCrawl.weight < key[v] {
+				key[v] = pCrawl.weight
+				parent[v] = u
+				res += pCrawl.weight
+				decreaseKey(&heap, v, key[v])
+			}
+		}
+	}
 }
 
 func getNodes() Graph {
@@ -109,5 +152,5 @@ func getNodes() Graph {
 
 func main() {
 	g := getNodes()
-
+	mst(g)
 }
