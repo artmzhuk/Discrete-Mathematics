@@ -62,15 +62,13 @@ func isEmpty(heap *MinHeap) bool {
 }
 
 func extractMin(heap *MinHeap) MinHeapNode {
-	/*	if isEmpty(heap) {
-		return nil
-	}*/
 	root := heap.array[0]
-	last := heap.array[len(heap.array)-1]
+	last := heap.array[heap.size-1]
 	heap.pos[root.v] = heap.size - 1
 	heap.pos[last.v] = 0
 
 	heap.array[0] = last
+	//heap.array[len(heap.array)-1] = root
 	heap.size--
 	minHeapify(heap, 0)
 	return root
@@ -111,7 +109,7 @@ func mst(g Graph) {
 		heap.array[v] = newMinHeapNode(v, key[v])
 		heap.pos[v] = v
 	}
-	key[0] = 0
+	//key[0] = 0
 	heap.array[0] = newMinHeapNode(0, key[0])
 	heap.pos[0] = 0
 	heap.size = V
@@ -122,6 +120,9 @@ func mst(g Graph) {
 			pCrawl := g.adjList[u][i]
 			v := g.adjList[u][i].dest
 			if isInMinHeap(&heap, v) && pCrawl.weight < key[v] {
+				if key[v] != math.MaxInt {
+					res -= key[v]
+				}
 				key[v] = pCrawl.weight
 				parent[v] = u
 				res += pCrawl.weight
