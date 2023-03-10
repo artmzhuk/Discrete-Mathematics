@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"sort"
 )
 
 type edge struct {
@@ -16,31 +17,6 @@ type rollercoaster struct {
 
 func (a rollercoaster) getR(b rollercoaster) float64 {
 	return math.Sqrt(math.Pow(a.x-b.x, 2) + math.Pow(a.y-b.y, 2))
-}
-
-func partition(low, high int, less func(i, j int) bool, swap func(i, j int)) int {
-	i, j := low, low
-	for j < high {
-		if less(j, high) {
-			swap(i, j)
-			i++
-		}
-		j++
-	}
-	swap(i, high)
-	return i
-}
-
-func qsortRec(low, high int, less func(i, j int) bool, swap func(i, j int)) {
-	if low < high {
-		q := partition(low, high, less, swap)
-		qsortRec(low, q-1, less, swap)
-		qsortRec(q+1, high, less, swap)
-	}
-}
-
-func qsort(n int, less func(i, j int) bool, swap func(i, j int)) {
-	qsortRec(0, n-1, less, swap)
 }
 
 func getEdges() []edge {
@@ -87,9 +63,7 @@ func unionSet(u, v int, parent, rank []int) {
 }
 
 func kruskal(edges []edge) float64 {
-	qsort(len(edges),
-		func(i, j int) bool { return edges[i].weight < edges[j].weight },
-		func(i, j int) { edges[i], edges[j] = edges[j], edges[i] })
+	sort.Slice(edges, func(i, j int) bool { return edges[i].weight < edges[j].weight })
 	var minCost float64
 	parent := make([]int, len(edges))
 	rank := make([]int, len(edges))
