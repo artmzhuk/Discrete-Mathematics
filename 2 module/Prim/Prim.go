@@ -68,7 +68,6 @@ func extractMin(heap *MinHeap) MinHeapNode {
 	heap.pos[last.v] = 0
 
 	heap.array[0] = last
-	//heap.array[len(heap.array)-1] = root
 	heap.size--
 	minHeapify(heap, 0)
 	return root
@@ -92,13 +91,13 @@ func isInMinHeap(heap *MinHeap, v int) bool {
 	return false
 }
 
-func mst(g Graph) {
+func mst(g Graph) int {
 	res := 0
 	V := g.nodeN
 	parent := make([]int, V)
 	key := make([]int, V)
 	heap := MinHeap{
-		size:     0,
+		size:     V,
 		capacity: V,
 		pos:      make([]int, V),
 		array:    make([]MinHeapNode, V),
@@ -109,10 +108,6 @@ func mst(g Graph) {
 		heap.array[v] = newMinHeapNode(v, key[v])
 		heap.pos[v] = v
 	}
-	//key[0] = 0
-	heap.array[0] = newMinHeapNode(0, key[0])
-	heap.pos[0] = 0
-	heap.size = V
 	for !isEmpty(&heap) {
 		minHeapNode := extractMin(&heap)
 		u := minHeapNode.v
@@ -130,6 +125,7 @@ func mst(g Graph) {
 			}
 		}
 	}
+	return res
 }
 
 func getNodes() Graph {
@@ -153,5 +149,5 @@ func getNodes() Graph {
 
 func main() {
 	g := getNodes()
-	mst(g)
+	fmt.Println(mst(g))
 }
