@@ -53,13 +53,7 @@ func minHeapify(minHeap *MinHeap, idx int) {
 	}
 }
 
-func isEmpty(heap *MinHeap) bool {
-	if heap.size == 0 {
-		return true
-	} else {
-		return false
-	}
-}
+func isEmpty(heap *MinHeap) bool { return heap.size == 0 }
 
 func extractMin(heap *MinHeap) MinHeapNode {
 	root := heap.array[0]
@@ -84,12 +78,7 @@ func decreaseKey(heap *MinHeap, v, key int) {
 	}
 }
 
-func isInMinHeap(heap *MinHeap, v int) bool {
-	if heap.pos[v] < heap.size {
-		return true
-	}
-	return false
-}
+func isInMinHeap(heap *MinHeap, v int) bool { return heap.pos[v] < heap.size }
 
 func mst(g Graph) int {
 	res := 0
@@ -120,7 +109,7 @@ func mst(g Graph) int {
 				}
 				key[v] = pCrawl.weight
 				parent[v] = u
-				res += pCrawl.weight
+				res += key[v]
 				decreaseKey(&heap, v, key[v])
 			}
 		}
@@ -130,20 +119,17 @@ func mst(g Graph) int {
 
 func getNodes() Graph {
 	var n, m int
-	fmt.Scan(&n, &m)
+	_, _ = fmt.Scan(&n, &m)
 	nodes := make([][]Node, n)
 	for i := 0; i < m; i++ {
 		var from, to, weight int
-		fmt.Scan(&from, &to, &weight)
+		_, _ = fmt.Scan(&from, &to, &weight)
 		node1 := Node{dest: to, weight: weight}
 		node2 := Node{dest: from, weight: weight}
 		nodes[from] = append(nodes[from], node1)
 		nodes[to] = append(nodes[to], node2)
 	}
-	g := Graph{
-		adjList: nodes,
-		nodeN:   n,
-	}
+	g := Graph{adjList: nodes, nodeN: n}
 	return g
 }
 
