@@ -89,7 +89,7 @@ func bfs(graph *Graph) []int {
 		if isSameDist[i] == true && graph.bases[j] != i {
 			result = append(result, i)
 		}
-		if graph.bases[j] == i {
+		if j < len(graph.bases) && graph.bases[j] == i {
 			j++
 		}
 	}
@@ -99,7 +99,12 @@ func bfs(graph *Graph) []int {
 func main() {
 	graph := getInput()
 	result := bfs(graph)
-	for i := range result {
-		fmt.Println(result[i])
+	fmt.Println()
+	if len(result) > 0 {
+		for i := range result {
+			fmt.Println(result[i])
+		}
+	} else {
+		fmt.Println("-")
 	}
 }
