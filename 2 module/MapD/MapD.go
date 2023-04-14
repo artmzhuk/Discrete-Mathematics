@@ -151,5 +151,6 @@ func mst(g Graph) int {
 
 func main() {
 	fmt.Println("Hi!")
-	getInput()
+	g := getInput()
+	mst(g)
 }
