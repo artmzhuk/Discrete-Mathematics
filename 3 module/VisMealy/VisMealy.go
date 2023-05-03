@@ -7,7 +7,7 @@ type Machine struct {
 	inputsNum  int //number of possible inputs
 	startState int //number of start state
 	stateTrans [][]int
-	outTrans   [][]rune
+	outTrans   [][]string
 }
 
 func getInput() Machine {
@@ -15,7 +15,7 @@ func getInput() Machine {
 	fmt.Scan(&n, &m, &q0)
 
 	states := make([][]int, n)
-	out := make([][]rune, n)
+	out := make([][]string, n)
 	for i := range states {
 		states[i] = make([]int, m)
 		for j := range states[i] {
@@ -23,11 +23,9 @@ func getInput() Machine {
 		}
 	}
 	for i := range out {
-		out[i] = make([]rune, m)
+		out[i] = make([]string, m)
 		for j := range out[i] {
-			var scanned string
-			fmt.Scan(&scanned)
-			out[i][j] = ([]rune(scanned))[0]
+			fmt.Scan(&out[i][j])
 		}
 	}
 
@@ -41,20 +39,18 @@ func getInput() Machine {
 	return machine
 }
 
-func createGraphVizFromMachine(m Machine) string {
-	result := "digraph {\n\trankdir = LR"
+func createGraphVizFromMachine(m Machine) {
+	fmt.Print("digraph {\n\trankdir = LR")
 	for i := 0; i < m.stateNum; i++ {
 		for j := 0; j < m.inputsNum; j++ {
-			result += fmt.Sprintf("\n\t%d -> %d [label = \"%c(%c)\"]",
+			fmt.Printf("\n    %d -> %d [label = \"%c(%s)\"]",
 				i, m.stateTrans[i][j], 'a'+j, m.outTrans[i][j])
 		}
 	}
-	result += "\n}"
-	return result
+	fmt.Print("\n}")
 }
 
 func main() {
 	machine := getInput()
-	res := createGraphVizFromMachine(machine)
-	fmt.Println(res)
+	createGraphVizFromMachine(machine)
 }
