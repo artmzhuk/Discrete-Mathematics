@@ -37,14 +37,7 @@ func polishNotation(input string) int {
 		case inputRune[i] < '(' || inputRune[i] > '9':
 			continue
 		case inputRune[i] >= '0' && inputRune[i] <= '9':
-			numberLength := 1
-			for ; inputRune[i+numberLength] >= '0' && inputRune[i+numberLength] <= '9'; numberLength++ {
-			} // calculates number length
-			for k := 0; k < numberLength/2; k++ {
-				inputRune[i+k], inputRune[i+numberLength-1-k] = inputRune[i+numberLength-1-k], inputRune[i+k]
-			} //reverses number to its normal state
-			number, _ := strconv.Atoi(string(inputRune[i : i+numberLength]))
-			i += numberLength - 1
+			number, _ := strconv.Atoi(string(inputRune[i]))
 			stack = append(stack, number)
 		case inputRune[i] == '+':
 			var a, b int
