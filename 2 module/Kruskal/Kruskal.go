@@ -63,6 +63,9 @@ func unionSet(u, v int, parent, rank []int) {
 }
 
 func kruskal(edges []edge) float64 {
+	if len(edges) == 1 {
+		return edges[0].weight
+	}
 	sort.Slice(edges, func(i, j int) bool { return edges[i].weight < edges[j].weight })
 	var minCost float64
 	parent := make([]int, len(edges))
