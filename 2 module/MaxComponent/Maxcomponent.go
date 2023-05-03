@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 type Graph struct {
@@ -111,23 +112,29 @@ func printAnswer(g *Graph, input []int) {
 			}
 			minIds[i] = minId
 		}
-		idToPrint = 0
-		for i := range minIds {
-			if minIds[i] < minIds[idToPrint] {
-				idToPrint = i
-			}
-		}
+
 	}
 	redNodes := make(map[int]bool)
-	fmt.Print("Graph g {\n")
+	fmt.Print("graph {\n")
+	sort.Slice(g.component[idToPrint], func(i, j int) bool {
+		return g.component[idToPrint][i] < g.component[idToPrint][j]
+	})
+	lastPrinted := 0
 	for i := range g.component[idToPrint] {
 		redNodes[g.component[idToPrint][i]] = true
-		fmt.Print(g.component[idToPrint][i], " [color = red]\n")
+		for k := lastPrinted; k < g.component[idToPrint][i]; k++ {
+			fmt.Printf("\t%d\n", k)
+		}
+		fmt.Print("\t", g.component[idToPrint][i], " [color = red]\n")
+		lastPrinted = g.component[idToPrint][i] + 1
+	}
+	for k := lastPrinted; k < len(g.adjList); k++ {
+		fmt.Printf("\t%d\n", k)
 	}
 
 	for i := range input {
 		if i%2 == 0 {
-			fmt.Print(input[i], "--")
+			fmt.Print("\t", input[i], " -- ")
 		} else {
 			fmt.Print(input[i])
 			if redNodes[input[i]] {
