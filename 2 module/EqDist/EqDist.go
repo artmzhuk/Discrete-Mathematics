@@ -57,11 +57,12 @@ func getInput() *Graph {
 }
 
 func bfs(graph *Graph) []int {
-	previousDist := make([]int, len(graph.edges))
-	isSameDist := make([]bool, len(graph.edges))
+	distanceToBases := make([][]int, len(graph.edges))
+	for i := range distanceToBases {
+		distanceToBases[i] = make([]int, len(graph.bases))
+	}
 	for currentBaseId := 0; currentBaseId < len(graph.bases); currentBaseId++ {
 		visited := make([]bool, len(graph.edges))
-		distToCurrentBase := make([]int, len(graph.edges))
 		queue := new(Queue)
 		visited[graph.bases[currentBaseId]] = true
 		queue.Push(graph.bases[currentBaseId])
@@ -73,24 +74,22 @@ func bfs(graph *Graph) []int {
 				if !visited[neighbour] {
 					queue.Push(neighbour)
 					visited[neighbour] = true
-					distToCurrentBase[neighbour] = distToCurrentBase[popped] + 1
-					if previousDist[neighbour] == 0 {
-						previousDist[neighbour] = distToCurrentBase[popped] + 1
-						isSameDist[neighbour] = true
-					} else if isSameDist[neighbour] && previousDist[neighbour] != distToCurrentBase[popped]+1 {
-						isSameDist[neighbour] = false
-					}
+					distanceToBases[neighbour][currentBaseId] = distanceToBases[popped][currentBaseId] + 1
 				}
 			}
 		}
 	}
 	result := make([]int, 0)
-	for i, j := 0, 0; i < len(isSameDist); i++ {
-		if isSameDist[i] == true && graph.bases[j] != i {
-			result = append(result, i)
+	for i := range distanceToBases {
+		sameDistFlag := true
+		for j := range graph.bases {
+			if distanceToBases[i][j] == 0 || j > 0 && distanceToBases[i][j-1] != distanceToBases[i][j] {
+				sameDistFlag = false
+				break
+			}
 		}
-		if j < len(graph.bases) && graph.bases[j] == i {
-			j++
+		if sameDistFlag {
+			result = append(result, i)
 		}
 	}
 	return result
