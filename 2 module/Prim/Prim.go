@@ -1,9 +1,51 @@
+/*priority queue from golang docs
+https://pkg.go.dev/container/heap#example-package-PriorityQueue
+*/
+
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"math"
 )
+
+type PriorityQueue []*Node
+
+func (pq PriorityQueue) Len() int { return len(pq) }
+
+func (pq PriorityQueue) Less(i, j int) bool {
+	return pq[i].weight < pq[j].weight
+}
+
+func (pq PriorityQueue) Swap(i, j int) {
+	pq[i], pq[j] = pq[j], pq[i]
+	pq[i].index = i
+	pq[j].index = j
+}
+
+func (pq *PriorityQueue) Push(x any) {
+	n := len(*pq)
+	item := x.(*Node)
+	item.index = n
+	*pq = append(*pq, item)
+}
+
+func (pq *PriorityQueue) Pop() any {
+	old := *pq
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil
+	item.index = -1
+	*pq = old[0 : n-1]
+	return item
+}
+
+func (pq *PriorityQueue) update(item *Node, value int, priority int) {
+	item.dest = value
+	item.weight = priority
+	heap.Fix(pq, item.index)
+}
 
 type Graph struct {
 	adjList [][]Node
@@ -11,110 +53,7 @@ type Graph struct {
 }
 
 type Node struct {
-	dest, weight int
-}
-
-type MinHeapNode struct {
-	v, key int
-}
-
-type MinHeap struct {
-	size, capacity int
-	pos            []int
-	array          []MinHeapNode
-}
-
-func newMinHeapNode(v, key int) MinHeapNode {
-	res := MinHeapNode{
-		v:   v,
-		key: key,
-	}
-	return res
-}
-
-func minHeapify(minHeap *MinHeap, idx int) {
-	smallest := idx
-	left := 2*idx + 1
-	right := 2*idx + 2
-	if left < minHeap.size &&
-		minHeap.array[left].key < minHeap.array[smallest].key {
-		smallest = left
-	}
-	if right < minHeap.size &&
-		minHeap.array[right].key < minHeap.array[smallest].key {
-		smallest = left
-	}
-	if smallest != idx {
-		minHeap.pos[minHeap.array[smallest].v] = idx
-		minHeap.pos[minHeap.array[idx].v] = smallest
-		minHeap.array[smallest], minHeap.array[idx] =
-			minHeap.array[idx], minHeap.array[smallest]
-		minHeapify(minHeap, smallest)
-	}
-}
-
-func isEmpty(heap *MinHeap) bool { return heap.size == 0 }
-
-func extractMin(heap *MinHeap) MinHeapNode {
-	root := heap.array[0]
-	last := heap.array[heap.size-1]
-	heap.pos[root.v] = heap.size - 1
-	heap.pos[last.v] = 0
-
-	heap.array[0] = last
-	heap.size--
-	minHeapify(heap, 0)
-	return root
-}
-
-func decreaseKey(heap *MinHeap, v, key int) {
-	i := heap.pos[v]
-	heap.array[i].key = key
-	for i != 0 && heap.array[i].key < heap.array[(i-1)/2].key {
-		heap.pos[heap.array[i].v] = (i - 1) / 2
-		heap.pos[heap.array[(i-1)/2].v] = i
-		heap.array[i], heap.array[(i-1)/2] = heap.array[(i-1)/2], heap.array[i]
-		i = (i - 1) / 2
-	}
-}
-
-func isInMinHeap(heap *MinHeap, v int) bool { return heap.pos[v] < heap.size }
-
-func mst(g Graph) int {
-	res := 0
-	V := g.nodeN
-	parent := make([]int, V)
-	key := make([]int, V)
-	heap := MinHeap{
-		size:     V,
-		capacity: V,
-		pos:      make([]int, V),
-		array:    make([]MinHeapNode, V),
-	}
-	for v := 1; v < V; v++ {
-		parent[v] = -1
-		key[v] = math.MaxInt
-		heap.array[v] = newMinHeapNode(v, key[v])
-		heap.pos[v] = v
-	}
-	for !isEmpty(&heap) {
-		minHeapNode := extractMin(&heap)
-		u := minHeapNode.v
-		for i := 0; i < len(g.adjList[u]); i++ {
-			pCrawl := g.adjList[u][i]
-			v := g.adjList[u][i].dest
-			if isInMinHeap(&heap, v) && pCrawl.weight < key[v] {
-				if key[v] != math.MaxInt {
-					res -= key[v]
-				}
-				key[v] = pCrawl.weight
-				parent[v] = u
-				res += key[v]
-				decreaseKey(&heap, v, key[v])
-			}
-		}
-	}
-	return res
+	dest, weight, index int
 }
 
 func getNodes() Graph {
@@ -131,6 +70,47 @@ func getNodes() Graph {
 	}
 	g := Graph{adjList: nodes, nodeN: n}
 	return g
+}
+
+func mst(g Graph) int {
+	pq := make(PriorityQueue, 1)
+	sum := 0
+	src := 0
+	key := make([]int, len(g.adjList))
+	inMST := make([]bool, len(g.adjList))
+	for i := range key {
+		key[i] = math.MaxInt
+		inMST[i] = false
+	}
+	pq[0] = &Node{
+		dest:   src,
+		weight: 0,
+	}
+	heap.Init(&pq)
+	key[src] = 0
+
+	for pq.Len() > 0 {
+		u := pq[0].dest
+		heap.Pop(&pq)
+		if !inMST[u] {
+			for i := range g.adjList[u] {
+				v := g.adjList[u][i].dest
+				weight := g.adjList[u][i].weight
+				if !inMST[v] && key[v] > weight {
+					key[v] = weight
+					heap.Push(&pq, &Node{
+						dest:   v,
+						weight: key[v],
+					})
+				}
+			}
+			inMST[u] = true
+		}
+	}
+	for i := range key {
+		sum += key[i]
+	}
+	return sum
 }
 
 func main() {
