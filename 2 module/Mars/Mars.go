@@ -108,78 +108,9 @@ func min(a, b int) int {
 	}
 }
 
-func flipSigns(arr []int) [][]int {
-	n := len(arr)
-	s := 0
-	for _, x := range arr {
-		s += x
-	}
-
-	// Create dp array
-	dp := make([][]bool, n)
-	for i := range dp {
-		dp[i] = make([]bool, 2*s+1)
-	}
-	dp[0][s] = true
-
-	// Compute dp array
-	for i := 1; i < n; i++ {
-		for j := 0; j <= 2*s; j++ {
-			if j+arr[i] <= 2*s && dp[i-1][j+arr[i]] {
-				dp[i][j] = true
-			}
-			if j-arr[i] >= 0 && dp[i-1][j-arr[i]] {
-				dp[i][j] = true
-			}
-		}
-	}
-
-	// Find indices of flipped elements
-	var indices [][]int
-	for i := 0; i < n; i++ {
-		if dp[i][s] {
-			indices = append(indices, []int{})
-			j := s
-			for k := i; k >= 1; k-- {
-				if dp[k-1][j+arr[k]] {
-					j += arr[k]
-					indices[len(indices)-1] = append(indices[len(indices)-1], k-1)
-				} else if dp[k-1][j-arr[k]] {
-					j -= arr[k]
-					indices[len(indices)-1] = append(indices[len(indices)-1], k-1)
-				} else {
-					// This should not happen
-					panic("Invalid dp array")
-				}
-			}
-			if dp[0][j+arr[0]] {
-				indices[len(indices)-1] = append(indices[len(indices)-1], 0)
-			} else if dp[0][j-arr[0]] {
-				indices[len(indices)-1] = append(indices[len(indices)-1], 0)
-			} else {
-				// This should not happen
-				panic("Invalid dp array")
-			}
-			// Reverse the order of indices
-			for j, k := 0, len(indices[len(indices)-1])-1; j < k; j, k = j+1, k-1 {
-				indices[len(indices)-1][j], indices[len(indices)-1][k] = indices[len(indices)-1][k], indices[len(indices)-1][j]
-			}
-		}
-	}
-
-	return indices
-}
-
-func lex(ids [][]int, sols solutions) {
-	if len(ids) == 1 {
-
-	}
-}
-
 func main() {
 	sol := findSolutions(inputGraph())
-	ids := flipSigns(sol.balance)
-	fmt.Println(ids)
+	fmt.Println(sol)
 	//sel(sol)
 	/*	if solutions != nil {
 		selectSolution(solutions)
@@ -299,3 +230,65 @@ func sel(solutions solutions) int {
   	}
   }
 */
+
+/*func flipSigns(arr []int) [][]int {
+	n := len(arr)
+	s := 0
+	for _, x := range arr {
+		s += x
+	}
+
+	// Create dp array
+	dp := make([][]bool, n)
+	for i := range dp {
+		dp[i] = make([]bool, 2*s+1)
+	}
+	dp[0][s] = true
+
+	// Compute dp array
+	for i := 1; i < n; i++ {
+		for j := 0; j <= 2*s; j++ {
+			if j+arr[i] <= 2*s && dp[i-1][j+arr[i]] {
+				dp[i][j] = true
+			}
+			if j-arr[i] >= 0 && dp[i-1][j-arr[i]] {
+				dp[i][j] = true
+			}
+		}
+	}
+
+	// Find indices of flipped elements
+	var indices [][]int
+	for i := 0; i < n; i++ {
+		if dp[i][s] {
+			indices = append(indices, []int{})
+			j := s
+			for k := i; k >= 1; k-- {
+				if dp[k-1][j+arr[k]] {
+					j += arr[k]
+					indices[len(indices)-1] = append(indices[len(indices)-1], k-1)
+				} else if dp[k-1][j-arr[k]] {
+					j -= arr[k]
+					indices[len(indices)-1] = append(indices[len(indices)-1], k-1)
+				} else {
+					// This should not happen
+					panic("Invalid dp array")
+				}
+			}
+			if dp[0][j+arr[0]] {
+				indices[len(indices)-1] = append(indices[len(indices)-1], 0)
+			} else if dp[0][j-arr[0]] {
+				indices[len(indices)-1] = append(indices[len(indices)-1], 0)
+			} else {
+				// This should not happen
+				panic("Invalid dp array")
+			}
+			// Reverse the order of indices
+			for j, k := 0, len(indices[len(indices)-1])-1; j < k; j, k = j+1, k-1 {
+				indices[len(indices)-1][j], indices[len(indices)-1][k] = indices[len(indices)-1][k], indices[len(indices)-1][j]
+			}
+		}
+	}
+
+	return indices
+}*/
