@@ -3,23 +3,20 @@ package main
 import (
 	"fmt"
 	"math"
+	"sort"
 )
-
-type solutions struct {
-	colors  [][]int
-	balance []int
-}
 
 type Graph struct {
 	adjList [][]int
 }
 
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	} else {
-		return x
-	}
+type solutions struct {
+	colors [][]int
+}
+
+type colorSplit struct {
+	color1 []int
+	color2 []int
 }
 
 func inputGraph() *Graph {
@@ -41,20 +38,16 @@ func inputGraph() *Graph {
 	return g
 }
 
-func findSolutions(g *Graph) solutions {
+func checkIsBipartiteAndSplit(g *Graph) solutions {
 	visited := make([]bool, len(g.adjList))
 	possibleSolutions := make([][]int, 0)
-	balance := make([]int, 0)
+	isBipartite := true
 	for i := 0; i < len(g.adjList); i++ {
 		if visited[i] {
 			continue
 		}
-		isBipartite := true
+		isBipartite = true
 		color := make([]int, len(g.adjList))
-		thisBalance := 1
-		/*		if color[i] != 0 {
-				continue
-			}*/
 		queue := make([]int, 0)
 		color[i] = 1
 		visited[i] = true
@@ -66,10 +59,8 @@ func findSolutions(g *Graph) solutions {
 				if color[g.adjList[popped][j]] == 0 {
 					if color[popped] == 1 {
 						color[g.adjList[popped][j]] = 2
-						thisBalance--
 					} else {
 						color[g.adjList[popped][j]] = 1
-						thisBalance++
 					}
 					visited[g.adjList[popped][j]] = true
 					queue = append(queue, g.adjList[popped][j])
@@ -83,212 +74,168 @@ func findSolutions(g *Graph) solutions {
 		}
 		if isBipartite {
 			possibleSolutions = append(possibleSolutions, color)
-			balance = append(balance, thisBalance)
+		} else {
+			break
 		}
 	}
-	if len(possibleSolutions) == 0 {
-		fmt.Println("No solution")
+	if len(possibleSolutions) == 0 || !isBipartite {
 		return solutions{
-			colors:  nil,
-			balance: nil,
+			colors: nil,
 		}
 	} else {
 		return solutions{
-			colors:  possibleSolutions,
-			balance: balance,
+			colors: possibleSolutions,
 		}
 	}
 }
 
-func min(a, b int) int {
-	if a <= b {
-		return a
+func selectSolution(s solutions) {
+	possible := make([]colorSplit, len(s.colors))
+	for i := range possible {
+		possible[i].color1 = make([]int, 0)
+		possible[i].color2 = make([]int, 0)
+		for j := range s.colors[i] {
+			if s.colors[i][j] == 1 {
+				possible[i].color1 = append(possible[i].color1, j)
+			} else if s.colors[i][j] == 2 {
+				possible[i].color2 = append(possible[i].color2, j)
+			}
+		}
+	}
+
+	ultraNode := make([][]int, 1)
+	for i := len(possible) - 1; i >= 0; i-- {
+		if len(possible[i].color1) == 1 && len(possible[i].color2) == 0 {
+			ultraNode[0] = append(ultraNode[0], possible[i].color1[0])
+			possible[i].color1 = possible[i].color1[:0]
+			possibleTmp := possible[:i]
+			possibleTmp2 := possible[i+1:]
+			possible = possible[0:0]
+			possible = append(possible, append(possibleTmp, possibleTmp2...)...)
+		}
+	}
+	if len(ultraNode[0]) > 0 {
+		for i := 1; i < int(math.Pow(2, float64(len(ultraNode[0]))))-1; i++ {
+			toAppend := make([]int, 0)
+			for j := 0; j < len(ultraNode[0]); j++ {
+				if (i>>j)&1 == 1 {
+					toAppend = append(toAppend, ultraNode[0][j])
+				}
+			}
+			ultraNode = append(ultraNode, toAppend)
+		}
+	}
+
+	possible2 := make([][]int, 0)
+	prev := make([][]int, 0)
+	if len(possible) > 0 {
+		recursiveGenerationOfSolutions(&possible2, &possible, prev, 0, 0)
+		recursiveGenerationOfSolutions(&possible2, &possible, prev, 0, 1)
+		for i := range possible2 {
+			for j := range ultraNode {
+				if len(possible2[i]) > 0 && len(ultraNode[0]) > 0 {
+					toCopy := make([]int, len(possible2[i]))
+					possible2 = append(possible2, toCopy)
+					copy(possible2[len(possible2)-1], possible2[i])
+					possible2[len(possible2)-1] = append(possible2[len(possible2)-1], ultraNode[j]...)
+				}
+			}
+		}
 	} else {
-		return b
+		for i := range ultraNode {
+			possible2 = append(possible2, nil)
+			possible2[i] = append(possible2[i], ultraNode[i]...)
+		}
+	}
+	for k := range possible2 {
+		sort.Slice(possible2[k], func(i, j int) bool {
+			return possible2[k][i] < possible2[k][j]
+		})
+	}
+
+	for i2 := len(possible2) - 1; i2 >= 0; i2-- {
+		toAppend := make([]int, 0)
+		j2 := 0
+		for k := 0; j2 < len(s.colors[0]) || k < len(possible2[i2]); {
+			if k >= len(possible2[i2]) || possible2[i2][k] != j2 {
+				toAppend = append(toAppend, j2)
+			} else {
+				k++
+			}
+			j2++
+		}
+		possible2 = append(possible2, toAppend)
+	}
+
+	possible3 := make([][]int, 0)
+	for diff := 0; diff < len(s.colors[0]); diff++ {
+		for i := range possible2 {
+			if len(possible2[i]) == len(s.colors[0])/2-diff || len(possible2[i]) == len(s.colors[0])/2+diff {
+				possible3 = append(possible3, possible2[i])
+			}
+		}
+		if len(possible3) > 0 {
+			break
+		}
+	}
+	if len(possible3) == 1 {
+		sort.Slice(possible3[0], func(i, j int) bool { return possible3[0][i] < possible3[0][j] })
+		for i := range possible3[0] {
+			fmt.Printf("%d ", possible3[0][i]+1)
+		}
+		return
+	}
+	for k := range possible3 {
+		sort.Slice(possible3[k], func(i, j int) bool {
+			return possible3[k][i] < possible3[k][j]
+		})
+	}
+	sort.Slice(possible3, func(i, j int) bool {
+		if len(possible3[i]) < len(possible3[j]) {
+			return true
+		} else if len(possible3[i]) > len(possible3[j]) {
+			return false
+		} else {
+			for k := range possible3[i] {
+				if possible3[i][k] < possible3[j][k] {
+					return true
+				} else if possible3[i][k] > possible3[j][k] {
+					return false
+				}
+			}
+		}
+		return true
+	})
+	for i := range possible3[0] {
+		fmt.Printf("%d ", possible3[0][i]+1)
+	}
+}
+
+func recursiveGenerationOfSolutions(array *[][]int, parent *[]colorSplit, prev [][]int, parent1, parent2 int) {
+	if parent2 == 0 {
+		prev = append(prev, (*parent)[parent1].color1)
+	} else {
+		prev = append(prev, (*parent)[parent1].color2)
+	}
+	if parent1+1 < len(*parent) {
+		recursiveGenerationOfSolutions(array, parent, prev, parent1+1, 0)
+		if len((*parent)[parent1+1].color2) != 0 {
+			recursiveGenerationOfSolutions(array, parent, prev, parent1+1, 1)
+		}
+	} else {
+		*array = append(*array, nil)
+		for i := range prev {
+			(*array)[len(*array)-1] = append((*array)[len(*array)-1], prev[i]...)
+		}
 	}
 }
 
 func main() {
-	sol := findSolutions(inputGraph())
-	fmt.Println(sol)
-	//sel(sol)
-	/*	if solutions != nil {
-		selectSolution(solutions)
-	}*/
+	g := inputGraph()
+	splittedGraph := checkIsBipartiteAndSplit(g)
+	if len(splittedGraph.colors) > 0 {
+		selectSolution(splittedGraph)
+	} else {
+		fmt.Println("No solution")
+	}
 }
-
-func sel(solutions solutions) int {
-	maxInt := math.MaxInt
-	flag := 1
-	sum := 0
-	A := solutions.balance
-	n := len(A)
-	flipped := make([][]bool, 2)
-	dp := make([]map[int]int, 2)
-	for i := 0; i < 2; i++ {
-		dp[i] = make(map[int]int)
-		//dp[1] = make(map[int]int)
-		flipped[i] = make([]bool, n)
-	}
-
-	for i := 0; i < n; i++ {
-		sum += A[i]
-	}
-	for i := -sum; i <= sum; i++ {
-		dp[0][i] = maxInt
-	}
-	dp[0][0] = 0
-	for i := 1; i <= n; i++ {
-		for j := -sum; j <= sum; j++ {
-			dp[flag][j] = maxInt
-			if j-A[i-1] <= sum && j-A[i-1] >= -sum { //sign isn't flipped for A[i-1]
-				dp[flag][j] = dp[flag^1][j-A[i-1]]
-				flipped[flag][i-1] = false
-			}
-			if j+A[i-1] <= sum && j+A[i-1] >= -sum && dp[flag^1][j+A[i-1]] != maxInt { //sign is flipped for A[i-1]
-				dp[flag][j] = min(dp[flag][j], dp[flag^1][j+A[i-1]]+1)
-				flipped[flag][i-1] = true
-			}
-		}
-		flag ^= 1
-	}
-	for i := 0; i <= sum; i++ {
-		if dp[flag^1][i] != maxInt {
-			return dp[flag^1][i]
-		}
-	}
-	return n - 1
-}
-
-/*func selectSolution(s [][]int) {
-  	diff := make([]int, len(s))
-  	for i := range s {
-  		count1 := 0
-  		count2 := 0
-  		for j := range s[i] {
-  			if s[i][j] == 1 {
-  				count1++
-  			}
-  			if s[i][j] == 2 {
-  				count2++
-  			}
-  			if s[i][j] == 0 {
-  				fmt.Println("panic")
-  				os.Exit(10)
-  			}
-  		}
-  		diff[i] = count1 - count2
-  	}
-  	similarDiffs := make([][]int, 0)
-  	similarDiffsIds := make([]int, 0)
-  	minDiff := diff[0]
-  	for i := range diff {
-  		if abs(diff[i]) < minDiff {
-  			minDiff = diff[i]
-  			similarDiffs = similarDiffs[0:0]
-  			similarDiffsIds = similarDiffsIds[0:0]
-  		}
-  		if abs(diff[i]) == minDiff {
-  			similarDiffs = append(similarDiffs, s[i])
-  			similarDiffsIds = append(similarDiffsIds, i)
-  		}
-  	}
-  	if len(similarDiffs) == 1 {
-  		for i := range similarDiffs[0] {
-  			if (diff[similarDiffsIds[0]] < 0 && s[similarDiffsIds[0]][i] == 2) ||
-  				(diff[similarDiffsIds[0]] > 0 && s[similarDiffsIds[0]][i] == 1) ||
-  				(diff[similarDiffsIds[0]] == 0 && s[similarDiffsIds[0]][i] == s[similarDiffsIds[0]][0]) {
-  				fmt.Print(i+1, " ")
-  			}
-  		}
-  	} else {
-  		firstGroups := make([][]int, len(similarDiffs))
-  		for i := range similarDiffs {
-  			for j := range s[similarDiffsIds[i]] {
-  				if (diff[similarDiffsIds[i]] < 0 && s[similarDiffsIds[i]][j] == 2) ||
-  					(diff[similarDiffsIds[i]] > 0 && s[similarDiffsIds[i]][j] == 1) ||
-  					(diff[similarDiffsIds[i]] == 0 && s[similarDiffsIds[i]][j] == s[similarDiffsIds[i]][0]) {
-  					firstGroups[i] = append(firstGroups[i], j)
-  				}
-
-  			}
-  		}
-  		swap := reflect.Swapper(firstGroups)
-  		for i := range firstGroups[0] {
-  			for j := range firstGroups {
-  				if firstGroups[j][i] > firstGroups[0][i] {
-  					swap(j, 0)
-  					firstGroups = firstGroups[1:]
-  				} else if firstGroups[j][i] < firstGroups[0][i] {
-  					swap(j, 0)
-  				}
-  			}
-  		}
-  		for i := range firstGroups[0] {
-  			fmt.Print(firstGroups[0][i]+1, " ")
-  		}
-  	}
-  }
-*/
-
-/*func flipSigns(arr []int) [][]int {
-	n := len(arr)
-	s := 0
-	for _, x := range arr {
-		s += x
-	}
-
-	// Create dp array
-	dp := make([][]bool, n)
-	for i := range dp {
-		dp[i] = make([]bool, 2*s+1)
-	}
-	dp[0][s] = true
-
-	// Compute dp array
-	for i := 1; i < n; i++ {
-		for j := 0; j <= 2*s; j++ {
-			if j+arr[i] <= 2*s && dp[i-1][j+arr[i]] {
-				dp[i][j] = true
-			}
-			if j-arr[i] >= 0 && dp[i-1][j-arr[i]] {
-				dp[i][j] = true
-			}
-		}
-	}
-
-	// Find indices of flipped elements
-	var indices [][]int
-	for i := 0; i < n; i++ {
-		if dp[i][s] {
-			indices = append(indices, []int{})
-			j := s
-			for k := i; k >= 1; k-- {
-				if dp[k-1][j+arr[k]] {
-					j += arr[k]
-					indices[len(indices)-1] = append(indices[len(indices)-1], k-1)
-				} else if dp[k-1][j-arr[k]] {
-					j -= arr[k]
-					indices[len(indices)-1] = append(indices[len(indices)-1], k-1)
-				} else {
-					// This should not happen
-					panic("Invalid dp array")
-				}
-			}
-			if dp[0][j+arr[0]] {
-				indices[len(indices)-1] = append(indices[len(indices)-1], 0)
-			} else if dp[0][j-arr[0]] {
-				indices[len(indices)-1] = append(indices[len(indices)-1], 0)
-			} else {
-				// This should not happen
-				panic("Invalid dp array")
-			}
-			// Reverse the order of indices
-			for j, k := 0, len(indices[len(indices)-1])-1; j < k; j, k = j+1, k-1 {
-				indices[len(indices)-1][j], indices[len(indices)-1][k] = indices[len(indices)-1][k], indices[len(indices)-1][j]
-			}
-		}
-	}
-
-	return indices
-}*/
